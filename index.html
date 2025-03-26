@@ -90,7 +90,7 @@
         <h2>Photo Edit Form</h2>
         <input type="file" accept="image/*" id="photo" >
         <input type="text" id="name" placeholder="Enter Name">
-        <input type="date" id="dob">
+        <input type="date" id="dob" placeholder="Date of Birth">
         <select id="gender">
             <option value="">Select Gender</option>
             <option value="Male">Male</option>
@@ -100,6 +100,7 @@
         <input type="text" id="num16" placeholder="1234 1234 1234 1234" maxlength="19" oninput="formatNumber(this, 16)">
         <textarea id="address" placeholder="Enter Address" class="address"></textarea>
 <button onclick="translateToHindi()">OK</button>
+        <p>Click OK button to autofill translated name and Address</p>
 <input type="text" id="hinname" placeholder="Name in Hindi">
 <textarea id="translatedAddress" placeholder="Translated Address" class="address"></textarea>
 

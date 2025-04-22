@@ -117,36 +117,66 @@
 
     <script>
 function translateToHindi() {
-let name = document.getElementById("name").value;
+    let name = document.getElementById("name").value;
     let text = document.getElementById("address").value;
-if (!name) {
+
+    if (!name) {
         alert("Please enter name to translate");
         return;
     }
-    let hinname = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(name)}`;
-    fetch(hinname)
+
+    // Translate name
+    let hinnameUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(name)}`;
+    fetch(hinnameUrl)
         .then(response => response.json())
         .then(data => {
-            document.getElementById("hinname").value = data[0].map(entry => entry[0]).join("");
-        })
-        .catch(() => alert("Translation failed. Please try again."));
-  
+            let hinNameText = data[0].map(entry => entry[0]).join("");
+            
+            // Apply corrections for known transliteration errors
+            const correctionMap = {
+                "अमेति": "अमेठी",
+                "इंडिया": "भारत",
+                "राहुल गान्धी": "राहुल गांधी",
+                "मोदि": "मोदी",
+                "गान्धी": "गांधी",
+                "मुंबई": "मुंबई", // Ensure unchanged
+                "बम्बे": "मुंबई", // Mumbai correction
+                "दिल्ली": "दिल्ली", // Ensure unchanged
+                "यूपी": "उत्तर प्रदेश",
+            };
 
-// address translation
-  if (!text) {
+            for (const [wrong, correct] of Object.entries(correctionMap)) {
+                const regex = new RegExp(wrong, 'g');
+                hinNameText = hinNameText.replace(regex, correct);
+            }
+
+            document.getElementById("hinname").value = hinNameText;
+        })
+        .catch(() => alert("Translation failed for name. Please try again."));
+
+    // Translate address
+    if (!text) {
         alert("Please enter text to translate");
         return;
     }
 
-
-    let url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`;
-    fetch(url)
+    let addressUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`;
+    fetch(addressUrl)
         .then(response => response.json())
         .then(data => {
-            document.getElementById("translatedAddress").value = data[0].map(entry => entry[0]).join("");
+            let translatedAddressText = data[0].map(entry => entry[0]).join("");
+
+            // Apply corrections for known transliteration errors
+            for (const [wrong, correct] of Object.entries(correctionMap)) {
+                const regex = new RegExp(wrong, 'g');
+                translatedAddressText = translatedAddressText.replace(regex, correct);
+            }
+
+            document.getElementById("translatedAddress").value = translatedAddressText;
         })
-        .catch(() => alert("Translation failed. Please try again."));
+        .catch(() => alert("Translation failed for address. Please try again."));
 }
+
 
         function formatNumber(input, length) {
             let value = input.value.replace(/\D/g, '');

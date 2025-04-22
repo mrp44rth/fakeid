@@ -167,6 +167,17 @@ function translateToHindi() {
             let translatedAddressText = data[0].map(entry => entry[0]).join("");
 
             // Apply corrections for known transliteration errors
+             const correctionMap = {
+                "अमेति": "अमेठी",
+                "इंडिया": "भारत",
+                "राहुल गान्धी": "राहुल गांधी",
+                "मोदि": "मोदी",
+                "गान्धी": "गांधी",
+                "मुंबई": "मुंबई", // Ensure unchanged
+                "बम्बे": "मुंबई", // Mumbai correction
+                "दिल्ली": "दिल्ली", // Ensure unchanged
+                "यूपी": "उत्तर प्रदेश",
+            };
             for (const [wrong, correct] of Object.entries(correctionMap)) {
                 const regex = new RegExp(wrong, 'g');
                 translatedAddressText = translatedAddressText.replace(regex, correct);

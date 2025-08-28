@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Edit Form</title>
+    <style>
+       body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column; /* Aligns everything in a column */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ensures full height */
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    margin: 0; /* Removes default margin */
+    text-align: center; /* Centers text content */
+}
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        textarea, input, select, button {
+            width: 95%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4facfe;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #00c2fe;
+        }
+.image-container {
+    width: 100%;
+    max-width: 263px;
+    aspect-ratio: 263 / 84;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #ccc;
+    margin-top: 20px;
+}
+
+.image-container {
+    width: 100%;
+    max-width: 90%;
+    aspect-ratio: 263 / 84;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #ccc;
+    margin: 20px auto; /* Adds space and centers it */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    cursor: grab;
+    user-drag: none;
+    position: absolute;
+}
+
+.overlay-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 133px; /* Adjust as needed */
+    height: 162px;
+    transform: translate(-50%, -50%);
+
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Photo Edit Form</h2>
+        <input type="file" accept="image/*" id="photo" >
+        <input type="text" id="name" placeholder="Enter Name">
+        <input type="date" id="dob" placeholder="Date of Birth">
+        <select id="gender">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+        <input type="text" id="num8" placeholder="1234 1234 1234" maxlength="14" oninput="formatNumber(this, 14)">
+        <input type="text" id="num16" placeholder="1234 1234 1234 1234" maxlength="19" oninput="formatNumber(this, 16)">
+        <textarea id="address" placeholder="Enter Address" class="address"></textarea>
+<button onclick="translateToHindi()">OK</button>
+        <p>Click OK button to autofill translated name and Address</p>
+<input type="text" id="hinname" placeholder="Name in Hindi">
+<textarea id="translatedAddress" placeholder="Translated Address" class="address"></textarea>
+
+
+
+        <button onclick="submitForm()">Submit</button>
+    </div>
+
+
+<canvas id="mergedCanvas"></canvas>
+<a id="downloadBtn" href="#" download>
+    <button>Download Image</button>
+</a>
+
+
+    <script>
+function translateToHindi() {
+    let name = document.getElementById("name").value;
+    let text = document.getElementById("address").value;
+
+    if (!name) {
+        alert("Please enter name to translate");
+        return;
+    }
+
+    // Translate name
+    let hinnameUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(name)}`;
+    fetch(hinnameUrl)
+        .then(response => response.json())
+        .then(data => {
+            let hinNameText = data[0].map(entry => entry[0]).join("");
+            
+            // Apply corrections for known transliteration errors
+            const correctionMap = {
+                "अमेति": "अमेठी",
+                "इंडिया": "भारत",
+                "राहुल गान्धी": "राहुल गांधी",
+                "मोदि": "मोदी",
+                "गान्धी": "गांधी",
+                "मुंबई": "मुंबई", // Ensure unchanged
+                "बम्बे": "मुंबई", // Mumbai correction
+                "दिल्ली": "दिल्ली", // Ensure unchanged
+                "यूपी": "उत्तर प्रदेश",
+            };
+
+            for (const [wrong, correct] of Object.entries(correctionMap)) {
+                const regex = new RegExp(wrong, 'g');
+                hinNameText = hinNameText.replace(regex, correct);
+            }
+
+            document.getElementById("hinname").value = hinNameText;
+        })
+        .catch(() => alert("Translation failed for name. Please try again."));
+
+    // Translate address
+    if (!text) {
+        alert("Please enter text to translate");
+        return;
+    }
+
+    let addressUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(text)}`;
+    fetch(addressUrl)
+        .then(response => response.json())
+        .then(data => {
+            let translatedAddressText = data[0].map(entry => entry[0]).join("");
+
+            // Apply corrections for known transliteration errors
+             const correctionMap = {
+                "अमेति": "अमेठी",
+                "इंडिया": "भारत",
+                "राहुल गान्धी": "राहुल गांधी",
+                "मोदि": "मोदी",
+                "गान्धी": "गांधी",
+                "मुंबई": "मुंबई", // Ensure unchanged
+                "बम्बे": "मुंबई", // Mumbai correction
+                "दिल्ली": "दिल्ली", // Ensure unchanged
+                "यूपी": "उत्तर प्रदेश",
+            };
+            for (const [wrong, correct] of Object.entries(correctionMap)) {
+                const regex = new RegExp(wrong, 'g');
+                translatedAddressText = translatedAddressText.replace(regex, correct);
+            }
+
+            document.getElementById("translatedAddress").value = translatedAddressText;
+        })
+        .catch(() => alert("Translation failed for address. Please try again."));
+}
+
+
+        function formatNumber(input, length) {
+            let value = input.value.replace(/\D/g, '');
+            if (length === 14) {
+                input.value = value.replace(/(\d{4})(\d{0,4})(\d{0,4})/, '$1 $2 $3');
+            } else if (length === 16) {
+                input.value = value.replace(/(\d{4})(\d{4})(\d{4})(\d{0,4})/, '$1 $2 $3 $4');
+            }
+        }
+
+      const img = document.getElementById("draggableImage");
+let isDragging = false;
+let startX, startY;
+let overlayX = 10; // Initial X position
+let overlayY = 10; // Initial Y position
+let scale = 1;
+
+if (img) {
+  img.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    startX = e.clientX - overlayX; // Capture initial position
+    startY = e.clientY - overlayY;
+    img.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    // Update overlayX and overlayY based on movement
+    overlayX = e.clientX - startX;
+    overlayY = e.clientY - startY;
+
+    // Apply transformation
+    img.style.transform = `translate(${overlayX}px, ${overlayY}px) scale(${scale})`;
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    img.style.cursor = "grab";
+  });
+
+  img.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    scale += e.deltaY * -0.01;
+    scale = Math.min(Math.max(0.5, scale), 3);
+
+    // Apply transformation with updated scale
+    img.style.transform = `translate(${overlayX}px, ${overlayY}px) scale(${scale})`;
+  });
+}
+
+
+// Reset Zoom & Position
+function resetZoom() {
+    scale = 1;
+    overlayX = 10;
+    overlayY = 10;
+    img.style.transform = `translate(${overlayX}px, ${overlayY}px) scale(${scale})`;
+}
+
+
+// Function to overlay the selected photo onto the background image
+function submitForm() {
+    const fileInput = document.getElementById("photo");
+    const file = fileInput.files[0];
+
+   const canvas = document.getElementById("mergedCanvas");
+const ctx = canvas.getContext("2d");
+    if (!file) {
+        alert("Please select a photo first.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const baseImage = new Image();
+        baseImage.src = "123.png"; // Background image
+
+        const overlayImage = new Image();
+        overlayImage.src = e.target.result; // User-uploaded image
+
+        baseImage.onload = function () {
+            overlayImage.onload = function () {
+                const canvas = document.getElementById("mergedCanvas");
+                const ctx = canvas.getContext("2d");
+                const downloadBtn = document.getElementById("downloadBtn");
+
+                // Set canvas size based on base image
+                canvas.width = baseImage.width;
+                canvas.height = baseImage.height;
+
+                // Draw base image
+                ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+
+                // Overlay user image at defined position
+        // Set fixed position instead of centering
+let overlayX = 73; // Adjust X position as needed
+let overlayY = 90; // Adjust Y position as needed
+
+ctx.drawImage(overlayImage, overlayX, overlayY, 134, 165);
+
+// add adhar number twice
+  let enteredNumber = document.getElementById("num8").value;
+// get vid
+let num16 = document.getElementById("num16").value;
+// Font & Style settings
+    ctx.font = "bold 35px Arial";
+    ctx.fillStyle = "black"; // Text color
+
+    // Define fixed positions
+    let textX1 = 220; // X position for first text
+    let textY1 = 370; // Y position for first text
+
+    let textX2 = 856; // X position for second text
+    let textY2 = 349; // Y position for second text
+
+    // Draw the number twice on the canvas
+    ctx.fillText(enteredNumber, textX1, textY1);
+    ctx.fillText(enteredNumber, textX2, textY2);
+
+//for vid
+ctx.font = "26px Arial bold"; // Bigger font for VID number
+    let vidX = 835, vidY = 375;
+    ctx.fillText("VID : " + num16, vidX, vidY);
+
+// adding name DOB and gender
+ // Get input values
+    let hinname = document.getElementById("hinname").value;
+    let name = document.getElementById("name").value;
+    let dob = document.getElementById("dob").value;
+    let gender = document.getElementById("gender").value;
+
+    // Convert gender to Hindi
+    let genderHindi = gender === "Male" ? "पुरुष" : gender === "Female" ? "महिला" : "";
+
+    // Format DOB as DD/MM/YYYY
+    let formattedDOB = dob ? dob.split("-").reverse().join("/") : "";
+
+    // Font & Style settings
+    ctx.fillStyle = "black"; // Text color
+    ctx.font = "18px Arial"; // Font size
+
+    // Adjustable line spacing
+    let lineSpacing = 24; // Change this value to adjust spacing
+    let startX = 220; // Starting X position
+    let startY = 110; // Starting Y position
+
+    // Draw text with spacing
+    ctx.fillText(hinname, startX, startY);
+    ctx.fillText(name, startX, startY + lineSpacing);
+    ctx.fillText("जन्म तिथि / DOB : " + formattedDOB, startX, startY + 2 * lineSpacing);
+    ctx.fillText(genderHindi + " / " + gender, startX, startY + 3 * lineSpacing);
+
+
+
+
+ // Get entered address values
+    let address = document.getElementById("address").value;
+    let translatedAddress = document.getElementById("translatedAddress").value;
+
+    // Font & Style settings
+    ctx.fillStyle = "black"; // Text color
+    ctx.font = "18px Arial"; // Font size
+
+    // Function to wrap text within 100px width
+    function wrapText(text, x, y, maxWidth, lineHeight) {
+        let words = text.split(" ");
+        let line = "";
+        
+        for (let i = 0; i < words.length; i++) {
+            let testLine = line + words[i] + " ";
+            let testWidth = ctx.measureText(testLine).width;
+            
+            if (testWidth > maxWidth && i > 0) {
+                ctx.fillText(line, x, y);
+                line = words[i] + " ";
+                y += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, y);
+    }
+
+    // Draw original address (wrapped to 100px)
+wrapText("पता: ", 702, 120, 350, 23);
+    wrapText( translatedAddress, 702, 143, 350, 23);
+
+    // Draw translated address (wrapped to 100px)
+wrapText("Address:", 702, 220, 340, 23);
+    wrapText(address, 702, 243, 340, 23);
+
+// end of adding person address
+                
+                // Get the name for the file
+                const fileName = document.getElementById("name").value.trim().replace(/ /g, "_") || "image";
+                downloadBtn.download = `${fileName}.png`;
+                downloadBtn.href = canvas.toDataURL("image/png");
+            };
+        };
+    };
+    reader.readAsDataURL(file);
+}
+
+    </script>
+</body>
+</html>
+
